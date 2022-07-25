@@ -1,12 +1,12 @@
 import React, {useState, useEffect, useRef} from "react";
 import Head from 'next/head';
+import Result from "../Result";
+import Timer from "../Timer";
 import randomWords from 'random-words';
 
 export const siteTitle = 'Typing Test Challenge';
 
 const noOfWords = 100;
-
-const chooseTime = [1, 2, 5];
 
 export default function Layout() {
     const [words, setWords] = useState([]);
@@ -20,7 +20,6 @@ export default function Layout() {
     const [inCorrect, setInCorrect] = useState(0);
     const [status, setStatus] = useState('waiting');
     const textInput = useRef(null);
-    const [selectTime, setSelectTime] = useState('');
     const [chooseText, setChooseText] = useState(false);
     const [customPhrase, setCustomPhrase] = useState('');
     const [totalWords, setTotalWords] = useState(0);
@@ -138,75 +137,46 @@ export default function Layout() {
     };
 
     return (
-        <div>
+        <div data-testid={'layout'}>
             <Head>
-                <link rel="icon" href="/favicon.ico" />
+                <link rel="icon" href="../../public/favicon.ico" />
                 <meta
                     name="description"
                     content="Learn how to build a personal website using Next.js"
                 />
                 <title>{siteTitle}</title>
             </Head>
-            <div style={{background: 'black', padding: '10px'}}>
+            <div style={{background: 'black', padding: '10px', minHeight: "100vh"}}>
                 <div className="section">
                     <div className="is-size-1 has-text-centered has-text-primary">
-                        <h2>{timerMinutes} : {timerSecond}</h2>
+                        <h2 data-testid={'time-header'}>{timerMinutes} : {timerSecond}</h2>
                     </div>
-                    {
-                        status === 'started' && (
-                                <div>
-                                    <button className="button is-info" onClick={reset}>
-                                        Restart
-                                    </button>
-                                </div>
-                        )
-                    }
-                    {
-                        status !== 'started' && (
-                            <div style={{display: 'flex',float: 'right', alignItems: 'center', flexFlow: 'wrap'}}>
-                                Set Time : {' '}
-                                {chooseTime.map((item) => (
-                                    <button key={item} style={{margin: '10px'}} className="button is-info" onClick={() => setTimer(item)}>
-                                       {item} min
-                                    </button>
-                                ))}
-                                <input type="number"
-                                       className={'input'}
-                                       style={{width: '30%', margin: '10px'}}
-                                       value={selectTime}
-                                       onChange={(e) => setSelectTime(e.target.value)}/>
-                                <button style={{margin: '10px'}} className="button is-info" onClick={() => {
-                                    setTimer(selectTime);
-                                    setSelectTime('')
-                                }}>
-                                    Set
-                                </button>
-
-
-                            </div>
-                        )
-                    }
+                    <Timer status={status} reset={reset} setTimer={setTimer}/>
                 </div>
                 <div className="control is-expanded section">
                     <input
                         ref={textInput}
                         disabled={status === 'finished'}
                         type="text" className={'input'}
+                        data-testid={'keyChange'}
                         onKeyDown={keyPress} value={userInput}
                         onChange={(e) =>setUserInput(e.target.value)}/>
                 </div>
                 <div className="section">
-                    <button className="button is-success is-fullwidth" onClick={start}>
+                    <button
+                        className="button is-success is-fullwidth"
+                        data-testid={'start'}
+                        onClick={start}>
                         Start Typing
                     </button>
                 </div>
                 {status === 'finished' ? null : (
-                    <div className={'section'}>
+                    <div className={'section'} data-testid={'words'}>
                         <div className="card">
                             <div className="card-content">
                                 <div className="content">
                                     {words.map((word, i) => (
-                                        <span key={i}>
+                                        <span key={i} data-testid={'randomWords'}>
                                     {word.split('').map((char, index) => (
                                         <span className={getClassName(i, index, char)} key={index}>{char}</span>
                                     ))} {' '}
@@ -236,6 +206,7 @@ export default function Layout() {
                             <button style={{margin: '10px'}}
                                     className="button is-info"
                                     onClick={() => setChooseText((prevState) => !prevState)}
+                                    data-testid={'custom-text'}
                             >
                                 Use Custom Text
                             </button>
@@ -245,22 +216,7 @@ export default function Layout() {
                 }
                 {
                     status === 'finished' && (
-                        <div className="section">
-                            <div className="columns">
-                                <div className="column has-text-centered">
-                                    <p className="is-size-5">Words Per Minute: </p>
-                                    <p className="has-text-primary is-size-1">{correct}</p>
-                                </div>
-                                <div className="column has-text-centered">
-                                    <p className="is-size-5">Accuracy: </p>
-                                    <p className="has-text-info is-size-1">{correct ? Math.round((correct / (correct + inCorrect)) * 100) : 0} %</p>
-                                </div>
-                                <div className="column">
-                                    <p className="is-size-5">Points: </p>
-                                    <p className="has-text-info is-size-1">{correct} / {totalWords}</p>
-                                </div>
-                            </div>
-                        </div>
+                        <Result correct={correct} inCorrect={inCorrect} seconds={seconds} totalWords={totalWords}/>
                     )
                 }
             </div>
